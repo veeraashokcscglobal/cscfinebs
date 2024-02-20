@@ -1,4 +1,0 @@
-CREATE OR REPLACE PACKAGE poctest
-IS
-END poctest;
-/
