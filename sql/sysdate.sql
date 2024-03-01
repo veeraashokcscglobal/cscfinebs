@@ -10,4 +10,7 @@ SELECT * FROM ra_customer_trx_lines_all;
 
 -- Changes done as part of Q1 2024 Release
 SELECT SYSDATE FROM DUAL;
+
+-- Changes done as part of Q1 2024 Release for User Story 124556
+SELECT * FROM xcsc_gari_staging_table WHERE ROWNUM < 100;
 /
