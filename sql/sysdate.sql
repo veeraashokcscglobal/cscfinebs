@@ -17,3 +17,4 @@ SELECT * FROM xcsc_gari_staging_table WHERE ROWNUM < 100;
 -- Changes done for Conflict Management
 SELECT 'Conflict' status FROM DUAL;
 /
+
