@@ -7,4 +7,7 @@ SELECT * FROM ap_suppliers;
 SELECT * FROM ap_supplier_sites_all;
 
 SELECT * FROM ra_customer_trx_lines_all;
+
+-- Changes done as part of Q1 2024 Release
+SELECT SYSDATE FROM DUAL;
 /
