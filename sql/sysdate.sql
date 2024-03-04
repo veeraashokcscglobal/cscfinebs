@@ -6,6 +6,4 @@ SELECT * FROM ap_suppliers;
 
 SELECT * FROM ap_supplier_sites_all;
 
--- Sample for conflict management
-SELECT 'Resource Management' Resources FROM DUAL; 
 /
