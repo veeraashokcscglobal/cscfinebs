@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataTemplate version="1.0" name="XCSCSMLOBA">
+<properties>
+<property name="xml_tag_case" value="upper"/>
+<property name="debug_mode" value="on"/>
+</properties>
+<parameters>
+<parameter name="P_ACCOUNT_NUMBER" dataType="VARCHAR2"/>
+<parameter name="P_DATE_FROM" dataType="DATE"/>
+<parameter name="P_DATE_TO" dataType="DATE"/>
+<parameter name="P_RATE" dataType="VARCHAR2"/>
+</parameters>
+<dataQuery>
+<sqlStatement name="Q_SMALL_OBAL">
+<![CDATA[ 
+SELECT DISTINCT
+  hao.NAME,
+    (SELECT LISTAGG(receipt_mehtod, ', ') WITHIN GROUP (ORDER BY receipt_mehtod) "receipt_mehtod"
+	FROM (select arm.name receipt_mehtod from apps.ar_receivable_applications_all ara, apps.ra_customer_trx_all rcta, apps.ar_cash_receipts_all acr, apps.ar_receipt_methods arm
+	where ara.applied_customer_trx_id=rcta.customer_trx_id
+	and ara.cash_receipt_id=acr.cash_receipt_id
+	and acr.receipt_method_id=arm.receipt_method_id
+	and rcta.customer_trx_id=ra.customer_trx_id
+	group by arm.name) a) receipt_method,
+  TO_CHAR(RA.TRX_DATE, 'MM/DD/YYYY') TRX_DATE,
+  RA.INTERFACE_HEADER_CONTEXT SOURCE_SYS,
+  HC.ACCOUNT_NUMBER,
+  HP.PARTY_NAME,
+  RA.ATTRIBUTE15 TR_SER_NAME,
+  APS.STATUS,
+  RA.ATTRIBUTE12 ORDER_N,
+  AC.DESCRIPTION COLLECTOR,
+  RA.TRX_NUMBER,
+  ra.INVOICE_CURRENCY_CODE CURRENCY,
+  APS.AMOUNT_DUE_ORIGINAL,
+  APS.AMOUNT_DUE_REMAINING,
+  ROUND(((APS.AMOUNT_DUE_REMAINING/DECODE(aps.AMOUNT_DUE_ORIGINAL,0,1,aps.AMOUNT_DUE_ORIGINAL))),5) PCT
+FROM
+  apps.ra_customer_trx_all ra,
+  apps.ra_customer_trx_lines_all rl,
+  apps.ar_payment_schedules_all aps,
+  apps.ra_cust_trx_types_all rt,
+  apps.hz_cust_accounts hc,
+  apps.HR_ALL_ORGANIZATION_UNITS_TL hao,
+  apps.HZ_CUSTOMER_PROFILES hcp,
+  apps.hz_parties hp,
+  apps.ar_collectors ac,
+  apps.hz_cust_acct_sites_all hcasa_bill,
+  apps.hz_cust_site_uses_all hcsua_bill,
+  apps.hz_party_sites hps_bill,
+  apps.ra_cust_trx_line_gl_dist_all rct
+WHERE
+  1                              = 1
+AND ra.customer_trx_id           = rl.customer_trx_id
+AND ra.customer_trx_id           = aps.customer_trx_id
+AND ra.org_id                    = aps.org_id
+AND ra.org_id                    = hao.ORGANIZATION_ID
+AND hcp.CUST_ACCOUNT_ID          = hc.CUST_ACCOUNT_ID
+AND hcp.COLLECTOR_ID             = ac.COLLECTOR_ID
+AND rct.customer_trx_id          = aps.customer_trx_id
+AND rct.customer_trx_id          = ra.customer_trx_id
+AND rct.customer_trx_id          = rl.customer_trx_id
+AND rct.customer_trx_line_id     = rl.customer_trx_line_id
+AND ra.complete_flag             = 'Y'
+AND rl.line_type                IN ('FREIGHT', 'LINE')
+AND ra.cust_trx_type_id          = rt.cust_trx_type_id
+AND ra.bill_to_customer_id       = hc.cust_account_id
+AND hc.status                    = 'A'
+AND hp.party_id                  = hc.party_id
+AND hcasa_bill.cust_account_id   = ra.bill_to_customer_id
+AND hcasa_bill.cust_acct_site_id = hcsua_bill.cust_acct_site_id
+AND hcsua_bill.site_use_code     = 'BILL_TO'
+AND hcsua_bill.site_use_id       = ra.bill_to_site_use_id
+AND hps_bill.party_site_id       = hcasa_bill.party_site_id
+AND hcasa_bill.status            = 'A'
+AND hcsua_bill.status            = 'A'
+AND aps.status                   = 'OP'
+AND hc.ACCOUNT_NUMBER            = NVL(:P_ACCOUNT_NUMBER, hc.ACCOUNT_NUMBER)
+AND ra.TRX_DATE                 >= :P_DATE_FROM
+AND ra.TRX_DATE                 <= NVL(:P_DATE_TO, ra.TRX_DATE)
+AND
+  (
+    aps.AMOUNT_DUE_REMAINING/DECODE(aps.AMOUNT_DUE_ORIGINAL,0,1,
+    aps.AMOUNT_DUE_ORIGINAL)
+  )
+  <= ((:P_RATE)/100)
+ORDER BY
+  1,
+  14 DESC,
+  2
+ ]]>
+</sqlStatement>
+</dataQuery>
+<dataStructure>
+<group name="G_SMALL_OBAL" dataType="varchar2" source="Q_SMALL_OBAL">
+<element name="S_TRX_DATE" value="TRX_DATE" dataType="varchar2"/>
+<element name="S_ONAME" value="NAME" dataType="varchar2"/>
+<element name="S_RECEIPT_METHOD" value="RECEIPT_METHOD" dataType="varchar2"/>
+<element name="S_SOURCE_SYS" value="SOURCE_SYS" dataType="varchar2"/>
+<element name="S_ACCOUNT_NUMBER" value="ACCOUNT_NUMBER" dataType="varchar2"/>
+<element name="S_PARTY_NAME" value="PARTY_NAME" dataType="varchar2"/>
+<element name="S_TR_SER_NAME" value="TR_SER_NAME" dataType="varchar2"/>
+<element name="S_STATUS" value="STATUS" dataType="varchar2"/>
+<element name="S_ORDER_N" value="ORDER_N" dataType="varchar2"/>
+<element name="S_COLLECTOR" value="COLLECTOR" dataType="varchar2"/>
+<element name="S_TRX_NUMBER" value="TRX_NUMBER" dataType="varchar2"/>
+<element name="S_CURRENCY" value="CURRENCY" dataType="varchar2"/>
+<element name="S_AMOUNT_DUE_ORIGINAL" value="AMOUNT_DUE_ORIGINAL" dataType="number"/>
+<element name="S_AMOUNT_DUE_REMAINING" value="AMOUNT_DUE_REMAINING" dataType="number"/>
+<element name="S_PCT" value="PCT" dataType="number"/>
+</group>
+</dataStructure>
+</dataTemplate>
